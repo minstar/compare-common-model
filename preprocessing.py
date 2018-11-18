@@ -6,6 +6,18 @@ import zipfile
 import collections
 import time
 
+# save dictionary as pickle
+def dict_to_pickle(pickle_file, dict_file):
+    with open(pickle_file, 'wb') as handle:
+        pickle.dump(dict_file, handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+# load pickle as dictionary
+def dict_pickle_open(pickle_file):
+    with open(pickle_file, 'rb') as handle:
+        dictionary = pickle.load(handle)
+
+    return dictionary
+
 # preprocess the data by using tensorflow because of speed
 def preprocess(file):
     with zipfile.ZipFile(file) as f:
@@ -56,6 +68,14 @@ def Subsampling(word_lst, words_index, threshold):
 
     return [idx for idx in words_index if word_prob[idx] < 1 - np.random.random()]
 
+# Make Unigram Distribution
+def Unigram_dict(words, word_lst):
+    unigram = {}
+
+    for idx, (word, freq) in enumerate(word_lst):
+        unigram[word] = freq / len(words)
+
+    return unigram
 
 def total_sampling (file_data=words, subsampling=False, threshold=None):
     start = time.time()
@@ -70,8 +90,12 @@ def total_sampling (file_data=words, subsampling=False, threshold=None):
         words_index = Subsampling(word_lst, words_index, threshold)
         subsample_time = time.time()
 
+    unigram_dict = Unigram_dict(words, word_lst)
+    unigram_time = time.time()
+
     print ('making dictionary : ', make_dict_time - start)
     print ('unknown count : ', unk_count - make_dict_time)
     print ('subsampling time : ', subsample_time - unk_count)
+    print ('unigram dictionary : ', unigram_time - subsample_time)
 
-    return file_data, word_lst, word_dict, word_reverse_dict, words_index
+    return file_data, word_lst, word_dict, word_reverse_dict, words_index, unigram_dict
