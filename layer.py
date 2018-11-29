@@ -36,7 +36,7 @@ def generate_batch(words, index, window_size):
 
 def Sigmoid(x):
     # clip input to -10~10
-    x = np.clip(x, -10, 10)
+    x = np.clip(x, -150, 150)
     return np.where(x > 0, 1. / (1. + np.exp(-x)), np.exp(x) / (np.exp(x) + np.exp(0)))
 
 def Skipgram(currentWord, contextWord, inputVectors, outputVectors,
@@ -214,7 +214,7 @@ class Unigram_Table:
     A list of indices of tokens in the vocab following a power law distribution,
     used to draw negative samples.
     """
-    def __init__(self, vocab, count, unigram_dictionary=dict()):
+    def __init__(self, vocab, count, unigram_dictionary):
         self.count = count
         #vocab_size = len(vocab)
         power = 0.75
@@ -222,7 +222,7 @@ class Unigram_Table:
         table = np.zeros(table_size, np.uint32)
 
         norm_val = sum(math.pow(uni_prob, power) for uni_prob in unigram_dictionary.values())
-
+        #norm = sum([math.pow(prob, power) for prob in unigram_dictionary])
         print ('Filling Unigram Table')
         p = 0 # Cumulative Probability
         i = 0

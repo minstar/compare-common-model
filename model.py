@@ -107,11 +107,12 @@ def test_word2vec():
 
     architectures = ['cbow', 'skipgram']
     use_loss = ['Softmax', 'Negative_Sampling', 'Hierarchical_Softmax']
-    learning_rate = {'Softmax':1e-3, 'Negative_Sampling':1e-3, 'Hierarchical_Softmax':1e-3}
+    learning_rate = {'Softmax':1e-2, 'Negative_Sampling':3e-3, 'Hierarchical_Softmax':2.5e-2}
 
     for architecture in architectures:
         for loss_type in use_loss:
             print ('Testing Model :%s, loss : %s' %(architecture, loss_type))
             model = Word2Vec(vocab_size, embedding_size, context_size, architecture=architecture, verbose=len(data),
-                            use_loss=loss_type, learning_rate = learning_rate[loss_type], sample_table=sample_table, encoder=node_dict)
+                            use_loss=loss_type, learning_rate = learning_rate[loss_type], sample_table=sample_table, encoder=node_dict,
+                            epochs=epoch)
             model.train(data)
