@@ -67,7 +67,7 @@ class Word2Vec():
 
                 elif self.architecture == 'skipgram':
                     for contextWord in contextWords:
-                        loss, grads, grads_idx = self.loss(currentWord, contextWords)
+                        loss, grads, grads_idx = self.loss(currentWord, contextWord)
                         self.gradient_update(grads, grads_idx)
 
                 sum_loss += loss
@@ -105,9 +105,9 @@ def test_word2vec():
     huffman_encode.encoding()
     node_lst, node_dict, reverse_node_dict = huffman_encode.make_node_dict()
 
-    architectures = ['cbow', 'skipgram']
-    use_loss = ['Softmax', 'Negative_Sampling', 'Hierarchical_Softmax']
-    learning_rate = {'Softmax':1e-2, 'Negative_Sampling':3e-3, 'Hierarchical_Softmax':2.5e-2}
+    architectures = ['skipgram', 'cbow']
+    use_loss = ['Negative_Sampling', 'Softmax', 'Hierarchical_Softmax']
+    learning_rate = {'Softmax':1e-2, 'Negative_Sampling':2.5e-2, 'Hierarchical_Softmax':2.5e-2}
 
     for architecture in architectures:
         for loss_type in use_loss:

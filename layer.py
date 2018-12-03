@@ -35,9 +35,9 @@ def generate_batch(words, index, window_size):
     return currentWord, contextWords
 
 def Sigmoid(x):
-    # clip input to -10~10
+    # clip input to -150~150
     x = np.clip(x, -150, 150)
-    return np.where(x > 0, 1. / (1. + np.exp(-x)), np.exp(x) / (np.exp(x) + np.exp(0)))
+    return np.where(x > 0, 1. / (1. + np.exp(-x)), np.exp(x) / (np.exp(x) + 1.))
 
 def Skipgram(currentWord, contextWord, inputVectors, outputVectors,
              use_loss='Softmax', sample_table=None, encoder=None):
@@ -54,14 +54,14 @@ def Skipgram(currentWord, contextWord, inputVectors, outputVectors,
     hidden = inputVectors[currentWord] # current word to hidden vector
 
     if use_loss == 'Softmax':
-        loss, grads, grads_idx = softmax(currentWord, contextWord, inputVectors, hidden, outputVectors)
+        loss, grads, grads_idx = softmax(contextWord, currentWord, inputVectors, hidden, outputVectors)
     elif use_loss == 'Hierarchical_Softmax':
-        loss, grads, grads_idx = hierarchical_softmax(currentWord, contextWord, inputVectors,
+        loss, grads, grads_idx = hierarchical_softmax(contextWord, currentWord, inputVectors,
                                                       hidden, outputVectors, huffman_encoding=encoder)
     elif use_loss == 'Negative_Sampling':
         # get unigram distribution and negative sampling index
         neg_sample = sample_table.sampling(contextWord)
-        loss, grads, grads_idx = negative_sampling(currentWord, contextWord, inputVectors,
+        loss, grads, grads_idx = negative_sampling(contextWord, currentWord, inputVectors,
                                                    hidden, outputVectors, samples=neg_sample)
 
     return loss, grads, grads_idx
@@ -125,17 +125,25 @@ def softmax(currentWord, contextWord, inputVectors, hiddenVectors, outputVectors
 
     return loss, grads, grads_idx
 
-def negative_sampling(currentWord, contextWord, inputVectors, hiddenVectors, outputVectors, samples):
+def negative_sampling(target, input_word, inputVectors, hiddenVectors, outputVectors, samples):
     loss = 0.0
     grads = {}
     grads_idx = {}
 
-    true_word = outputVectors[currentWord]
+    #print ('inputVectors shape ', inputVectors.shape)
+    #print ('hiddenVectors shape ', hiddenVectors.shape)
+    #print ('outputVectors shape ', outputVectors.shape)
+    #print ('target word shape ', target.shape)
+    #print ('input_word shape ', input_word.shape)
+
+    true_word = outputVectors[target]
     nega_word = outputVectors[samples]
 
-    true_out = np.dot(hiddenVectors, true_word)
-    nega_out = np.dot(hiddenVectors, nega_word.T)
+    true_out = np.dot(true_word, hiddenVectors)    # (1, 6) (6, )
+    nega_out = np.dot(nega_word, hiddenVectors)    # (N, 6) (6, )
 
+#    print ('true_out shape and nega_out shape')
+#    print (true_out.shape, nega_out.shape)
     true_loss = Sigmoid(true_out)
     nega_loss = Sigmoid(-nega_out)
 
@@ -147,14 +155,14 @@ def negative_sampling(currentWord, contextWord, inputVectors, hiddenVectors, out
     nega_grad = 1 - nega_loss  # sigmoid
 
     grads['true_out'] = np.multiply(true_grad, hiddenVectors)
-    grads['nega_out'] = np.dot(nega_grad.reshape(-1, 1), hiddenVectors.reshape(1, -1))
-    grads['true_in']  = np.multiply(true_grad, true_word)
-    grads['nega_out'] = np.dot(nega_word.T, nega_grad)
+    grads['nega_out'] = np.dot(nega_grad.reshape(-1, 1), hiddenVectors.reshape(1,-1))
+    grads['true_in']  = np.multiply(true_word.T, true_grad)
+    grads['nega_in']  = np.dot(nega_word.T, nega_grad)
 
-    grads_idx['true_out'] = currentWord
+    grads_idx['true_out'] = target
     grads_idx['nega_out'] = samples
-    grads_idx['true_in']  = contextWord
-    grads_idx['nega_in']  = contextWord
+    grads_idx['true_in']  = input_word
+    grads_idx['nega_in']  = input_word
 
     return loss, grads, grads_idx
 
